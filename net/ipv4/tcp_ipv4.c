@@ -104,7 +104,7 @@ struct inet_hashinfo tcp_hashinfo;
 EXPORT_SYMBOL(tcp_hashinfo);
 
 #ifndef CONFIG_MPTCP
-static inline 
+static inline
 #endif
 __u32 tcp_v4_init_sequence(const struct sk_buff *skb)
 {
@@ -479,7 +479,7 @@ void tcp_v4_err(struct sk_buff *icmp_skb, u32 info)
 		if (code != ICMP_NET_UNREACH && code != ICMP_HOST_UNREACH)
 			break;
 		if (seq != tp->snd_una  || !icsk->icsk_retransmits ||
-		    !icsk->icsk_backoff 
+		    !icsk->icsk_backoff
 #ifdef CONFIG_MPTCP
 			|| fastopen
 #endif
@@ -683,7 +683,7 @@ int tcp_v4_gso_send_check(struct sk_buff *skb)
  *	Exception: precedence violation. We do not implement it in any case.
  */
 #ifndef CONFIG_MPTCP
-static 
+static
 #endif
 void tcp_v4_send_reset(struct sock *sk, struct sk_buff *skb)
 {
@@ -949,7 +949,7 @@ void tcp_v4_reqsk_send_ack(struct sock *sk, struct sk_buff *skb,
 	 */
 	tcp_v4_send_ack(skb, (sk->sk_state == TCP_LISTEN) ?
 			tcp_rsk(req)->snt_isn + 1 : tcp_sk(sk)->snd_nxt,
-			tcp_rsk(req)->rcv_nxt, 
+			tcp_rsk(req)->rcv_nxt,
 #ifdef CONFIG_MPTCP
 			0,
 #endif
@@ -973,7 +973,7 @@ void tcp_v4_reqsk_send_ack(struct sock *sk, struct sk_buff *skb,
  *	socket.
  */
 #ifndef CONFIG_MPTCP
-static 
+static
 #endif
 int tcp_v4_send_synack(struct sock *sk, struct dst_entry *dst,
 #ifdef CONFIG_MPTCP
@@ -1032,7 +1032,7 @@ static int tcp_v4_rtx_synack(struct sock *sk, struct request_sock *req)
  *	IPv4 request_sock destructor.
  */
 #ifndef CONFIG_MPTCP
-static 
+static
 #endif
 void tcp_v4_reqsk_destructor(struct request_sock *req)
 {
@@ -1075,7 +1075,7 @@ EXPORT_SYMBOL(tcp_syn_flood_action);
  * Save and compile IPv4 options into the request_sock if needed.
  */
 #ifndef CONFIG_MPTCP
-static 
+static
 #endif
 struct ip_options_rcu *tcp_v4_save_options(struct sk_buff *skb)
 {
@@ -1962,7 +1962,7 @@ put_and_exit:
 EXPORT_SYMBOL(tcp_v4_syn_recv_sock);
 
 #ifndef CONFIG_MPTCP
-static 
+static
 #endif
 struct sock *tcp_v4_hnd_req(struct sock *sk, struct sk_buff *skb)
 {
@@ -2187,7 +2187,7 @@ bool tcp_prequeue(struct sock *sk, struct sk_buff *skb)
 	} else if (skb_queue_len(&tp->ucopy.prequeue) == 1) {
 		wake_up_interruptible_sync_poll(sk_sleep(sk),
 					   POLLIN | POLLRDNORM | POLLRDBAND);
-		if (!inet_csk_ack_scheduled(sk) 
+		if (!inet_csk_ack_scheduled(sk)
 #ifdef CONFIG_MPTCP
 			&& !mptcp(tp)
 #endif
@@ -3264,6 +3264,7 @@ struct proto tcp_prot = {
 #ifdef CONFIG_MPTCP
 	.clear_sk		= tcp_v4_clear_sk,
 #endif
+	.diag_destroy		= tcp_abort,
 };
 EXPORT_SYMBOL(tcp_prot);
 
