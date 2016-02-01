@@ -2002,6 +2002,11 @@ static int wacom_i2c_probe(struct i2c_client *client,
 	wacom_fw_update(wac_i2c, FW_BUILT_IN, bforced);
 	/*complete_all(&wac_i2c->init_done);*/
 
+#ifdef WACOM_FORCE_BATTERY_SAVING_MODE
+    /* Force shut down digitizer during suspend */
+    wac_i2c->battery_saving_mode = true;
+#endif
+
 	return 0;
 
  err_request_pdct_irq:

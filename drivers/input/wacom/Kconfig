@@ -108,3 +108,10 @@ config WACOM_LCD_FREQ_COMPENSATE
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called wacom.
+
+config WACOM_FORCE_BATTERY_SAVING_MODE
+	bool "Disable the Wacom digitizer on S-Pen insertion"
+	help
+	  Say Y here if you want to force enable the power save features.
+
+	  If unsure, say N.
