@@ -199,28 +199,7 @@ static void flip_cover_work(struct work_struct *work)
 
 	if(first == second) {
 		flip_cover = first;
-
-#ifdef CONFIG_FOLDER_DUAL_PANEL
-		/* For display switching */
-		if (ddata->folder_type)
-			decon_display_switch_by_hall(!flip_cover);
-		else
-			decon_display_switch_by_hall(flip_cover);
-#endif
-
-#ifdef CONFIG_SENSORS_HALL_FOLDER
-		if (ddata->folder_type) {
-			/* foder open : 0, close : 1 */
-			blocking_notifier_call_chain(&hall_ic_notifier_list, !flip_cover, NULL);
-			input_report_switch(ddata->input, SW_LID, !flip_cover);
-		} else {  /* flip open : 1, close : 0 */
-			blocking_notifier_call_chain(&hall_ic_notifier_list, flip_cover, NULL);
-			input_report_switch(ddata->input, SW_FLIP, flip_cover);
-		}
-#else
-		input_report_switch(ddata->input, SW_FLIP, flip_cover);
-#endif
-
+		input_report_switch(ddata->input, SW_LID, !flip_cover);
 		input_sync(ddata->input);
 	}
 }
@@ -309,7 +288,7 @@ static void flip_cover_work(struct work_struct *work)
 
 	flip_cover = first;
 	input_report_switch(ddata->input,
-			SW_FLIP, flip_cover);
+			SW_LID, !flip_cover);
 	input_sync(ddata->input);
 }
 #endif
@@ -481,14 +460,7 @@ static int hall_probe(struct platform_device *pdev)
 	input->dev.parent = &pdev->dev;
 
 	input->evbit[0] |= BIT_MASK(EV_SW);
-#ifdef CONFIG_SENSORS_HALL_FOLDER
-	if (ddata->folder_type)
-		input_set_capability(input, EV_SW, SW_LID);
-	else
-		input_set_capability(input, EV_SW, SW_FLIP);
-#else
-	input_set_capability(input, EV_SW, SW_FLIP);
-#endif
+	input_set_capability(input, EV_SW, SW_LID);
 
 	input->open = hall_open;
 	input->close = hall_close;
