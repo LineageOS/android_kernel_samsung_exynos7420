@@ -431,7 +431,8 @@ CONFIG_SECCOMP=y
 #
 # Boot options
 #
-CONFIG_CMDLINE=""
+CONFIG_CMDLINE="androidboot.hardware=samsungexynos7420"
+CONFIG_CMDLINE_EXTEND=y
 # CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE is not set
 
 #
