@@ -291,6 +291,85 @@ static int sec_bat_set_charge(
 	battery->temp_low_cnt = 0;
 	battery->temp_recover_cnt = 0;
 
+	/* Set siop_level to 70 when charging */
+	if (val.intval == POWER_SUPPLY_TYPE_MAINS) {
+		int x = 70;
+
+		/* This code is copied from sec_bat_store_attrs() case SIOP_LEVEL */
+#if defined(CONFIG_WIRELESS_CHARGER_INBATTERY)
+		union power_supply_propval value;
+#endif
+		dev_err(battery->dev, "%s: siop level: %d\n", __func__, x);
+		battery->chg_limit = SEC_BATTERY_CHG_TEMP_NONE;
+
+#if defined(CONFIG_WIRELESS_CHARGER_HIGH_VOLTAGE)
+		wpc_temp_mode = false;
+#endif
+		if (x == battery->siop_level && battery->capacity > 5) {
+			dev_info(battery->dev, "%s: skip same siop level: %d\n", __func__, x);
+			//return count;
+			goto siop_set_end;
+		} else if (x >= 0 && x <= 100) {
+			battery->siop_level = x;
+		} else {
+			battery->siop_level = 100;
+		}
+		battery->r_siop_level = battery->siop_level;
+
+#if defined(CONFIG_WIRELESS_CHARGER_HIGH_VOLTAGE)
+		if (battery->siop_event == SIOP_EVENT_WPC_CALL_START ||
+			battery->siop_event == SIOP_EVENT_WPC_CALL_END) {
+			dev_info(battery->dev, "%s: siop_event == SIOP_EVENT_WPC_CALL_\n", __func__);
+			//return count;
+			goto siop_set_end;
+		}
+#endif
+
+#if defined(CONFIG_WIRELESS_CHARGER_INBATTERY)
+		value.intval = battery->siop_level;
+		psy_do_property(battery->pdata->wireless_charger_name, set, POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN, value);
+		dev_info(battery->dev, "%s: %s - POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN(%d)\n", __func__, battery->pdata->wireless_charger_name, value.intval);
+
+		if (battery->cable_type == POWER_SUPPLY_TYPE_WIRELESS &&
+				battery->status == POWER_SUPPLY_STATUS_CHARGING &&
+				!battery->cc_cv_mode &&
+				battery->siop_level == 100 ) {
+			value.intval = 0; /* 5.5 */
+			psy_do_property(battery->pdata->wireless_charger_name, set, POWER_SUPPLY_PROP_CHARGE_TYPE, value);
+			dev_info(battery->dev, "%s: POWER_SUPPLY_PROP_CHARGE_TYPE(%d)\n", __func__, value.intval);
+		} else if (battery->cable_type == POWER_SUPPLY_TYPE_WIRELESS &&
+				battery->status == POWER_SUPPLY_STATUS_CHARGING &&
+				!battery->cc_cv_mode &&
+				battery->siop_level != 100) {
+			value.intval = 1; /* 5 */
+			psy_do_property(battery->pdata->wireless_charger_name, set, POWER_SUPPLY_PROP_CHARGE_TYPE, value);
+			dev_info(battery->dev, "%s: POWER_SUPPLY_PROP_CHARGE_TYPE(%d)\n", __func__, value.intval);
+		}
+#endif
+		if (battery->capacity <= 5) {
+			battery->siop_level = 100;
+			battery->ignore_siop = true;
+		} else if (battery->ignore_siop) {
+			battery->ignore_siop = false;
+		}
+
+		wake_lock(&battery->siop_wake_lock);
+		dev_info(battery->dev, "%s: siop_wake_lock held\n", __func__);
+
+		if (battery->cable_type == POWER_SUPPLY_TYPE_WIRELESS ||
+			battery->cable_type == POWER_SUPPLY_TYPE_HV_WIRELESS ||
+			battery->cable_type == POWER_SUPPLY_TYPE_PMA_WIRELESS) {
+			queue_delayed_work_on(0, battery->monitor_wqueue, &battery->siop_work, msecs_to_jiffies(1200));
+			dev_info(battery->dev, "%s: queue_delayed_work_on(1200)\n", __func__);
+		}
+		else {
+			queue_delayed_work_on(0, battery->monitor_wqueue, &battery->siop_work, 0);
+			dev_info(battery->dev, "%s: queue_delayed_work_on(0)\n", __func__);
+		}
+	}
+
+siop_set_end:
+
 	psy_do_property(battery->pdata->charger_name, set,
 		POWER_SUPPLY_PROP_ONLINE, val);
 
