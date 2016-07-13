@@ -281,6 +281,7 @@ config TIMA
 
 config TIMA_LKMAUTH
 	bool "Enable LKM authentication by TIMA"
+	default n
 	help
 	  TIMA authenticates loaded kernel modules. Disable it if you don't
 	  want TIMA enabled.
