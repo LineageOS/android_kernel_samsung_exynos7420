@@ -137,11 +137,12 @@ static inline int avc_audit(u32 ssid, u32 tsid,
 	if (likely(!audited))
 		return 0;
 	return slow_avc_audit(ssid, tsid, tclass,
-			      requested, audited, 0, result,
+			      requested, audited, denied, result,
 			      a, flags);
 }
 
-#define AVC_STRICT 0
+#define AVC_STRICT 1 /* Ignore permissive mode. */
+#define AVC_OPERATION_CMD 2	/* ignore command when updating operations */
 int avc_has_perm_noaudit(u32 ssid, u32 tsid,
 			 u16 tclass, u32 requested,
 			 unsigned flags,
