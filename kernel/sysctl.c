@@ -1091,8 +1091,8 @@ static struct ctl_table kern_table[] = {
 		.maxlen		= sizeof(mmap_rnd_bits),
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec_minmax,
-		.extra1		= &mmap_rnd_bits_min,
-		.extra2		= &mmap_rnd_bits_max,
+		.extra1		= (void *)&mmap_rnd_bits_min,
+		.extra2		= (void *)&mmap_rnd_bits_max,
 	},
 #endif
 	{ }
