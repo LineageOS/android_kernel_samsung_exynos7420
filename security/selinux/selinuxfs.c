@@ -133,15 +133,10 @@ static unsigned long sel_last_ino = SEL_INO_NEXT - 1;
 static ssize_t sel_read_enforce(struct file *filp, char __user *buf,
 				size_t count, loff_t *ppos)
 {
-	int display_state = selinux_enforcing;
 	char tmpbuf[TMPBUFLEN];
 	ssize_t length;
-	
-#if defined(SELINUX_PRETEND_ENFORCE)
-	display_state = 1;
-#endif
 
-	length = scnprintf(tmpbuf, TMPBUFLEN, "%d", display_state);
+	length = scnprintf(tmpbuf, TMPBUFLEN, "%d", selinux_enforcing);
 	return simple_read_from_buffer(buf, count, ppos, tmpbuf, length);
 }
 
@@ -175,7 +170,7 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 	length = -EINVAL;
 	if (sscanf(page, "%d", &new_value) != 1)
 		goto out;
-#if defined(SELINUX_ALWAYS_ENFORCE)
+#ifdef CONFIG_ALWAYS_ENFORCE
 	// If build is user build and enforce option is set, selinux is always enforcing
 	length = task_has_security(current, SECURITY__SETENFORCE);
 	audit_log(current->audit_context, GFP_KERNEL, AUDIT_MAC_STATUS,
@@ -183,21 +178,10 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
                         new_value, selinux_enforcing,
                         from_kuid(&init_user_ns, audit_get_loginuid(current)),
                         audit_get_sessionid(current));
-	selinux_enforcing = 1;
+	selinux_enforcing = new_value;
 	avc_ss_reset(0);
-	selnl_notify_setenforce(selinux_enforcing);
-	selinux_status_update_setenforce(selinux_enforcing);
-#elif defined(SELINUX_ALWAYS_PERMISSIVE)
-	// If build is user build and enforce option is set, selinux is always enforcing
-	length = task_has_security(current, SECURITY__SETENFORCE);
-	audit_log(current->audit_context, GFP_KERNEL, AUDIT_MAC_STATUS,
-                        "config_always_permissive - true; enforcing=%d old_enforcing=%d auid=%u ses=%u",
-                        new_value, selinux_enforcing,
-                        from_kuid(&init_user_ns, audit_get_loginuid(current)),
-                        audit_get_sessionid(current));
-	selinux_enforcing = 0;
-	selnl_notify_setenforce(selinux_enforcing);
-	selinux_status_update_setenforce(selinux_enforcing);
+	selnl_notify_setenforce(new_value);
+	selinux_status_update_setenforce(new_value);
 #else
 	if (new_value != selinux_enforcing) {
 		length = task_has_security(current, SECURITY__SETENFORCE);
