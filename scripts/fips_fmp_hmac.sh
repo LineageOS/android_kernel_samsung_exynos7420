@@ -46,7 +46,7 @@ if [ $retval -ne 0 ]; then
 	exit 1
 fi
 
-declare -A array
+declare -a array
 
 # FOR GENERIC CRYPTO FILES                         #awk fields to cut
 array[0]=".text first_fmp_text last_fmp_text \$5 \$6"
