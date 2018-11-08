@@ -60,8 +60,7 @@ kernelsymfile := $(objtree)/Module.symvers
 modulesymfile := $(firstword $(KBUILD_EXTMOD))/Module.symvers
 
 # Step 1), find all modules listed in $(MODVERDIR)/
-echo | xargs -r &>/dev/null && XARGS_OPTS="-r"
-MODLISTCMD := find $(MODVERDIR) -name '*.mod' | xargs $(XARGS_OPTS) grep -h '\.ko$$' | sort -u
+MODLISTCMD := find $(MODVERDIR) -name '*.mod' | xargs -r grep -h '\.ko$$' | sort -u
 __modules := $(shell $(MODLISTCMD))
 modules   := $(patsubst %.o,%.ko, $(wildcard $(__modules:.ko=.o)))
 
